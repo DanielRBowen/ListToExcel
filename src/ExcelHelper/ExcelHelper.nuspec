@@ -15,7 +15,7 @@
     </description>
     <tags>Excel ExportExcel ListToExcel ExcelToList</tags>
     <dependencies>
-      <dependency id="ClosedXML" version="0.76.0" />
+      <dependency id="ClosedXML" version="0.87.1" />
     </dependencies>
   </metadata>
   <files>
