@@ -11,7 +11,6 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>
       Excel Helper will allow you to export to Excel from List of T and Parse Excel to List of T with custom validation and highlighting options.
-      <description/>
     </description>
     <tags>Excel ExportExcel ListToExcel ExcelToList</tags>
     <dependencies>
