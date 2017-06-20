@@ -6,8 +6,8 @@
     <title>ListToExcel</title>
     <authors>TheDev6</authors>
     <owners>Allan Chadwick</owners>
-    <projectUrl>http://www.achadwick.com/DeveloperBlog/Result/Treadmill-Retry</projectUrl>
-    <iconUrl>https://dev6.blob.core.windows.net/blog-images/tag-retry.jpg</iconUrl>
+    <projectUrl>https://github.com/TheDev6/ListToExcel</projectUrl>
+    <iconUrl>https://dev6.blob.core.windows.net/blog-images/tag-list-excel.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>
       Excel Helper will allow you to export to Excel from List of T and Parse Excel to List of T with custom validation and highlighting options.
