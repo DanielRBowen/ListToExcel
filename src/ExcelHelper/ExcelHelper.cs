@@ -23,7 +23,7 @@
                     foreach (var prop in typeof(T).GetProperties())
                     {
                         mappings.Add(new Tuple<int, PropertyInfo, XLCellValues>(colIndex, prop, this.GetExcelDataTypeFromCType(prop.PropertyType)));
-                        headerRow.Cell(colIndex).Value = prop.Name;
+                        headerRow.Cell(colIndex).Value = this.GetColumnName(prop);
                         headerRow.Style.Font.Bold = true;
                         headerRow.Style.Font.Underline = XLFontUnderlineValues.Single;
                         colIndex++;
@@ -52,10 +52,10 @@
             using (var ws = xl.AddWorksheet($"{nameof(T)}Template"))
             {
                 var cellCount = ws.FirstCell().WorksheetColumn().ColumnNumber();
-                foreach (var prop in typeof(T).GetProperties())
+                foreach (var prop in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.CanRead))
                 {
                     var cell = ws.Cell(row: 1, column: cellCount);
-                    cell.Value = prop.Name;
+                    cell.Value = this.GetColumnName(prop);
                     cell.Style.Font.Bold = true;
                     cell.Style.Font.Underline = XLFontUnderlineValues.Single;
                     cellCount++;
@@ -121,12 +121,18 @@
         {
             var result = new List<PropertyMapParser>();
 
-            var headerCells = headerRow.Cells(firstColumn: headerRow.FirstCellUsed().WorksheetColumn().ColumnNumber(),
+            var headerCells = headerRow.Cells(
+                firstColumn: headerRow.FirstCellUsed().WorksheetColumn().ColumnNumber(),
                 lastColumn: headerRow.LastCellUsed().WorksheetColumn().ColumnNumber());
 
-            foreach (var p in typeof(T).GetProperties())
+            foreach (var p in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.CanWrite && p.CanRead))
             {
-                var cell = headerCells.SingleOrDefault(c => String.Compare(c.GetString(), p.Name, StringComparison.InvariantCultureIgnoreCase) == 0);
+                var cell = headerCells.SingleOrDefault(
+                    c => String.Compare(
+                             strA: c.GetString(),
+                             strB: this.GetColumnName(p),
+                             comparisonType: StringComparison.InvariantCultureIgnoreCase) == 0);
+
                 if (cell != null)
                 {
                     var mapping = new PropertyMapParser { ObjectPropertyInfo = p, ExcelColumnIndex = cell.WorksheetColumn().ColumnNumber(), TryGetProperty = this.TryParseProperty };
@@ -241,6 +247,19 @@
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Attempts to get the Column Name from attrubet then property name
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        public virtual string GetColumnName(PropertyInfo p)
+        {
+            return p.GetCustomAttributes(true)
+                .OfType<ExcelColumnNameAttribute>()
+                .SingleOrDefault()?
+                .ColumnName ?? p.Name;
         }
     }
 }

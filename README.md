@@ -111,6 +111,7 @@ namespace ExcelHelper.ExamplesAndTests
     public class WidgetSauce
     {
         public Guid WidgetGuid { get; set; }
+        [ExcelColumnName("Widget /Id#")]//when the columns names are crazy and can't be parsed directy to C#. Works in both directions to list and parse.
         public int WidgetId { get; set; }
         public int? SomeNumber { get; set; }
         public string WidgetName { get; set; }

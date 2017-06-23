@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExcelColumnNameAttribute.cs" />
     <Compile Include="ExcelHelper.cs" />
     <Compile Include="ExcelParseResult.cs" />
     <Compile Include="IExcelHelper.cs" />

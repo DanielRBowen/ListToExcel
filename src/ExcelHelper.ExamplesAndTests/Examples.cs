@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using ClosedXML.Excel;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Tynamix.ObjectFiller;
-
-namespace ExcelHelper.ExamplesAndTests
+﻿namespace ExcelHelper.ExamplesAndTests
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using ClosedXML.Excel;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Tynamix.ObjectFiller;
+
     [TestClass]
     public class Examples
     {
@@ -103,6 +103,8 @@ namespace ExcelHelper.ExamplesAndTests
     public class WidgetSauce
     {
         public Guid WidgetGuid { get; set; }
+
+        [ExcelColumnName("Widget /Id#")]
         public int WidgetId { get; set; }
         public int? SomeNumber { get; set; }
         public string WidgetName { get; set; }
