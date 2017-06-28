@@ -11,6 +11,7 @@ namespace ExcelHelper
         XLWorkbook ListToExcel<T>(List<T> list) where T : class;
         XLWorkbook BuildExcelTemplate<T>();
         ExcelParseResult<T> ParseExcel<T>(Stream excelStream, Func<T, List<string>> validateT = null) where T : class, new();
+        SheetParseResult<T> ParseSheet<T>(IXLWorksheet sheet, Func<T, List<string>> validateT = null) where T : class, new();
         List<PropertyMapParser> GetDefaultPropertyMapParsers<T>(IXLRow headerRow) where T : class;
         bool TryParseProperty(PropertyInfo propertyInfo, string input, out object outVal);
         void FillCellBackground(ref IXLCell cell, bool isValid);

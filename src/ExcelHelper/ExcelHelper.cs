@@ -64,6 +64,55 @@
             return xl;
         }
 
+        public virtual SheetParseResult<T> ParseSheet<T>(IXLWorksheet sheet, Func<T, List<string>> validateT = null) where T : class, new()
+        {
+            if (sheet == null) throw new ArgumentNullException(nameof(sheet));
+
+            var result = new SheetParseResult<T>();
+            var headerRow = sheet.FirstRowUsed();
+            var lastRow = sheet.LastRowUsed();
+            var mappings = GetDefaultPropertyMapParsers<T>(headerRow);
+
+            //foreach over the rows and parse to T
+            foreach (var _row in sheet.Rows(firstRow: headerRow.RowBelow().RowNumber(), lastRow: lastRow.RowNumber()))
+            {
+                result.TotalRecordCount++;
+                var row = _row;//modified closure
+                var runningValidation = new List<string>();//use to give feedback on parse and validation
+                var t = new T();
+                foreach (var m in mappings)
+                {
+                    object val;
+                    var cell = row.Cell(m.ExcelColumnIndex);
+                    var didParse = m.TryGetProperty(propertyInfo: m.ObjectPropertyInfo, input: cell.GetString(), outVal: out val);
+                    if (didParse)
+                    {
+                        m.ObjectPropertyInfo.SetValue(t, val);
+                    }
+                    else
+                    {
+                        runningValidation.Add($"{m.ObjectPropertyInfo.Name} did not parse.");
+                    }
+
+                    this.FillCellBackground(cell: ref cell, isValid: didParse);
+                }
+
+                if (runningValidation.Count == 0 && validateT != null)
+                {
+                    runningValidation.AddRange(validateT(t));
+                }
+
+                if (runningValidation.Count == 0)
+                {
+                    result.ValidList.Add(t);
+                }
+
+                this.FillRowBackgroundWithValidationMessage(row: ref row, isValid: runningValidation.Count == 0, validationMessages: runningValidation);
+            }
+
+            return result;
+        }
+
         public virtual ExcelParseResult<T> ParseExcel<T>(Stream excelStream, Func<T, List<string>> validateT = null) where T : class, new()
         {
             var result = new ExcelParseResult<T>();
@@ -71,46 +120,9 @@
             {
                 using (var sheet = xl.Worksheet(1))
                 {
-                    var headerRow = sheet.FirstRowUsed();
-                    var lastRow = sheet.LastRowUsed();
-                    var mappings = GetDefaultPropertyMapParsers<T>(headerRow);
-
-                    //foreach over the rows and parse to T
-                    foreach (var _row in sheet.Rows(firstRow: headerRow.RowBelow().RowNumber(), lastRow: lastRow.RowNumber()))
-                    {
-                        result.TotalRecordCount++;//run the record count
-                        var row = _row;//modified closure
-                        var runningValidation = new List<string>();//use to give feedback on parse and validation
-                        var t = new T();
-                        foreach (var m in mappings)
-                        {
-                            object val;
-                            var cell = row.Cell(m.ExcelColumnIndex);
-                            var didParse = m.TryGetProperty(propertyInfo: m.ObjectPropertyInfo, input: cell.GetString(), outVal: out val);
-                            if (didParse)
-                            {
-                                m.ObjectPropertyInfo.SetValue(t, val);
-                            }
-                            else
-                            {
-                                runningValidation.Add($"{m.ObjectPropertyInfo.Name} did not parse.");
-                            }
-
-                            this.FillCellBackground(cell: ref cell, isValid: didParse);
-                        }
-
-                        if (runningValidation.Count == 0 && validateT != null)
-                        {
-                            runningValidation.AddRange(validateT(t));
-                        }
-
-                        if (runningValidation.Count == 0)
-                        {
-                            result.ValidList.Add(t);
-                        }
-
-                        this.FillRowBackgroundWithValidationMessage(row: ref row, isValid: runningValidation.Count == 0, validationMessages: runningValidation);
-                    }
+                    var sheetResult = this.ParseSheet(sheet: sheet, validateT: validateT);
+                    result.ValidList = sheetResult.ValidList;
+                    result.TotalRecordCount = sheetResult.TotalRecordCount;
                 }
                 result.XlWorkbook = xl;
             }

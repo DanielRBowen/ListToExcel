@@ -58,6 +58,7 @@
     <Compile Include="IExcelHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyMapParser.cs" />
+    <Compile Include="SheetParseResult.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ExcelHelper.nuspec" />
