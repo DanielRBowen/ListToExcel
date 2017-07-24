@@ -36,7 +36,7 @@
                         foreach (var map in mappings)
                         {
                             var cell = row.Cell(map.Item1);
-                            cell.Value = map.Item2.GetValue(item).ToString();
+                            cell.Value = map.Item2.GetValue(item)?.ToString();
                             cell.DataType = map.Item3;
                         }
                         rowCount++;
