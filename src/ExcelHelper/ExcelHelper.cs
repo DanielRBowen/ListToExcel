@@ -12,54 +12,48 @@
     {
         public virtual XLWorkbook ListToExcel<T>(List<T> list) where T : class
         {
-            using (var xl = new XLWorkbook())
+            using var xl = new XLWorkbook();
+            var sheet = xl.AddWorksheet($"ListOf{typeof(T).Name}");
+            var mappings = new List<Tuple<int, PropertyInfo, XLDataType>>();
+            var headerRow = sheet.FirstRow();
+
+            int colIndex = 1;
+            foreach (var prop in typeof(T).GetProperties())
             {
-                using (var sheet = xl.AddWorksheet($"ListOf{typeof(T).Name}"))
-                {
-                    var mappings = new List<Tuple<int, PropertyInfo, XLCellValues>>();
-                    var headerRow = sheet.FirstRow();
-
-                    int colIndex = 1;
-                    foreach (var prop in typeof(T).GetProperties())
-                    {
-                        mappings.Add(new Tuple<int, PropertyInfo, XLCellValues>(colIndex, prop, this.GetExcelDataTypeFromCType(prop.PropertyType)));
-                        headerRow.Cell(colIndex).Value = this.GetColumnName(prop);
-                        headerRow.Style.Font.Bold = true;
-                        headerRow.Style.Font.Underline = XLFontUnderlineValues.Single;
-                        colIndex++;
-                    }
-
-                    var rowCount = 2;
-                    foreach (var item in list)
-                    {
-                        var row = sheet.Row(rowCount);
-                        foreach (var map in mappings)
-                        {
-                            var cell = row.Cell(map.Item1);
-                            cell.Value = map.Item2.GetValue(item)?.ToString();
-                            cell.DataType = map.Item3;
-                        }
-                        rowCount++;
-                    }
-                    return xl;
-                }
+                mappings.Add(new Tuple<int, PropertyInfo, XLDataType>(colIndex, prop, this.GetExcelDataTypeFromCType(prop.PropertyType)));
+                headerRow.Cell(colIndex).Value = this.GetColumnName(prop);
+                headerRow.Style.Font.Bold = true;
+                headerRow.Style.Font.Underline = XLFontUnderlineValues.Single;
+                colIndex++;
             }
+
+            var rowCount = 2;
+            foreach (var item in list)
+            {
+                var row = sheet.Row(rowCount);
+                foreach (var map in mappings)
+                {
+                    var cell = row.Cell(map.Item1);
+                    cell.Value = map.Item2.GetValue(item)?.ToString();
+                    cell.DataType = map.Item3;
+                }
+                rowCount++;
+            }
+            return xl;
         }
 
         public virtual XLWorkbook BuildExcelTemplate<T>()
         {
             var xl = new XLWorkbook();
-            using (var ws = xl.AddWorksheet($"{nameof(T)}Template"))
+            var ws = xl.AddWorksheet($"{nameof(T)}Template");
+            var cellCount = ws.FirstCell().WorksheetColumn().ColumnNumber();
+            foreach (var prop in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.CanRead))
             {
-                var cellCount = ws.FirstCell().WorksheetColumn().ColumnNumber();
-                foreach (var prop in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.CanRead))
-                {
-                    var cell = ws.Cell(row: 1, column: cellCount);
-                    cell.Value = this.GetColumnName(prop);
-                    cell.Style.Font.Bold = true;
-                    cell.Style.Font.Underline = XLFontUnderlineValues.Single;
-                    cellCount++;
-                }
+                var cell = ws.Cell(row: 1, column: cellCount);
+                cell.Value = this.GetColumnName(prop);
+                cell.Style.Font.Bold = true;
+                cell.Style.Font.Underline = XLFontUnderlineValues.Single;
+                cellCount++;
             }
             return xl;
         }
@@ -118,12 +112,10 @@
             var result = new ExcelParseResult<T>();
             using (var xl = new XLWorkbook(excelStream))
             {
-                using (var sheet = xl.Worksheet(1))
-                {
-                    var sheetResult = this.ParseSheet(sheet: sheet, validateT: validateT);
-                    result.ValidList = sheetResult.ValidList;
-                    result.TotalRecordCount = sheetResult.TotalRecordCount;
-                }
+                var sheet = xl.Worksheet(1);
+                var sheetResult = this.ParseSheet(sheet: sheet, validateT: validateT);
+                result.ValidList = sheetResult.ValidList;
+                result.TotalRecordCount = sheetResult.TotalRecordCount;
                 result.XlWorkbook = xl;
             }
             return result;
@@ -210,10 +202,10 @@
             }
         }
 
-        public virtual XLCellValues GetExcelDataTypeFromCType(Type propertyType)
+        public virtual XLDataType GetExcelDataTypeFromCType(Type propertyType)
         {
             //just copied from msdn, might not be complete
-            XLCellValues result = XLCellValues.Text;
+            var result = XLDataType.Text;
             switch (propertyType.ToString())
             {
                 case "System.Int16":
@@ -240,21 +232,21 @@
                 case "System.Nullable`1[System.UInt32]":
                 case "System.UInt64":
                 case "System.Nullable`1[UInt64]":
-                    result = XLCellValues.Number;
+                    result = XLDataType.Number;
                     break;
                 case "System.Boolean":
                 case "System.Nullable`1[System.Boolean]":
-                    result = XLCellValues.Boolean;
+                    result = XLDataType.Boolean;
                     break;
                 case "System.DateTime":
                 case "System.Nullable`1[System.DateTime]":
-                    result = XLCellValues.DateTime;
+                    result = XLDataType.DateTime;
                     break;
                 case "System.Char":
                 case "System.Nullable`1[System.Char]":
                 case "System.String":
                 default:
-                    result = XLCellValues.Text;
+                    result = XLDataType.Text;
                     break;
             }
 
