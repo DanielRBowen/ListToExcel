@@ -134,6 +134,36 @@ namespace ExcelHelper.ExamplesAndTests
                 messageCell.Value = String.Join(">>>>>", validationMessages);
             }
         }
-    }
+    }   
 }
 ```
+
+Web API use example:
+```C#
+/// <summary>
+/// Gets the users as an excel spreadsheet
+/// Uses https://www.nuget.org/packages/ListToExcel.Fork/1.0.0
+/// https://github.com/DanielRBowen/ListToExcel
+/// Application Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+/// </summary>
+/// <returns></returns>
+[HttpGet, ActionName("GetUsersAsExcel")]
+public async Task<IActionResult> GetUsersAsExcel()
+{
+    try
+    {
+        var users = await QueryUsersViewModels().ToListAsync();
+        var excelHelper = new ExcelHelper.ExcelHelper();
+        using var workbook = excelHelper.ListToExcel(users);
+        using var memoryStream = new MemoryStream();
+        workbook.SaveAs(memoryStream);
+        var bytes = memoryStream.ToArray();
+        return Ok(bytes);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, ex.Message);
+        return StatusCode(500, ex);
+    }
+}
+``
